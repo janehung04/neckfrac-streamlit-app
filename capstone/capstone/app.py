@@ -10,12 +10,14 @@ import matplotlib.image as mpimg
 import matplotlib as mpl
 import pydicom
 from pydicom.pixel_data_handlers.util import apply_voi_lut
+import SimpleITK as sitk
 
 # TODO
-# - [ ] connect to aws
+# - [ ] connect to aws ?
+# - [ ] call api? and get patient specific
 # - [ ] make a prediction csv
 # - [x] add view for axial animation
-# - [ ] use a dicom viewer https://neurosnippets.com/posts/diesitcom/
+# - [x] use a dicom viewer https://neurosnippets.com/posts/diesitcom/
 
 
 @st.cache
@@ -23,7 +25,7 @@ def get_frac_prob():
     """
     Return probability of fracture [patient overall, C1,C2,C3,C4,C5,C6,C7]
     """
-    # TODO call api? and get patient specific
+    
     prob = np.zeros(8)
     prob[0] = 100
     prob[[1, 2]] = 100
@@ -43,29 +45,36 @@ def get_sagittal_view(patient):
     st.image(image, use_column_width=True)
 
 
-def get_dcm_images(path):
-    paths = list(path.glob("*"))
-    paths.sort(
-        key=lambda x: int(x.stem)
-    )  # sort based on slice index which is the filename: index.dcm
-    data = [pydicom.dcmread(f) for f in paths]
-    images = [apply_voi_lut(dcm.pixel_array, dcm) for dcm in data]
-    return images
+def plot_slice(vol, slice_ix):
+    fig, ax = plt.subplots()
+    plt.axis("off")
+    selected_slice = vol[slice_ix, :, :]
+    ax.imshow(selected_slice, origin="lower", cmap="bone")
+    return fig
 
 
 def get_axial_view(patient):
     fname = Path(f"img/train_image/1.2.826.0.1.3680043.{patient}")
-    dcm_images = get_dcm_images(path=p / fname)
-    # range(len(dcm_images))
-    for frame_num, frame_index in enumerate(np.linspace(0, len(dcm_images), 100)):
-        # frame_text.text("Frame %i/100" % (frame_num + 1))
-        frame_text.text(f"Frame {int(frame_index)+1}/{len(dcm_images)}")
-        progress_bar.progress(frame_num)
+    reader = sitk.ImageSeriesReader()
+    dicom_names = reader.GetGDCMSeriesFileNames(str(p / fname))
+    reader.SetFileNames(dicom_names)
+    reader.LoadPrivateTagsOn()
+    reader.MetaDataDictionaryArrayUpdateOn()
+    data = reader.Execute()
+    img = sitk.GetArrayViewFromImage(data)
+    n_slices = img.shape[0]
 
-        image.image(
-            dcm_images[int(frame_index)], use_column_width=True, clamp=True, channels="RGB"
-        )
-        time.sleep(0.5)
+    for frame_num, frame_index in enumerate(np.linspace(0, n_slices, 100)):
+
+        frame_text.text(f"Frame {int(frame_index)+1}/{n_slices}")
+        progress_bar.progress(frame_num)
+        if frame_index < n_slices:
+            fig = plot_slice(img, int(frame_index))
+            plot = image.pyplot(fig)
+
+            time.sleep(0.5)
+
+    plt.close()
 
 
 if __name__ == "__main__":
@@ -79,7 +88,7 @@ if __name__ == "__main__":
     )
     st.title("🦴 NeckFrac - Quicker, better, more accurate diagnosis to save lives.")
 
-    col1, col2 = st.columns([2, 1])
+    col1, col2 = st.columns(2)
 
     with st.sidebar:
         patient = st.selectbox("Patient ID", ("13096", "XXXX"))
