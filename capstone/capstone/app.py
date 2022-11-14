@@ -15,7 +15,9 @@ import SimpleITK as sitk
 # TODO
 # - [ ] connect to aws ?
 # - [ ] call api? and get patient specific
+# - [ ] test with multiple patients?
 # - [ ] make a prediction csv
+# - [ ] deploy and share
 # - [x] add view for axial animation
 # - [x] use a dicom viewer https://neurosnippets.com/posts/diesitcom/
 
@@ -39,13 +41,34 @@ def get_frac_prob():
 
 
 def get_sagittal_view(patient):
+    """
+    Get sagittal view for patient
+    """
     fname = Path(f"img/sagittal_train_image/1.2.826.0.1.3680043.{patient}.png")
     fname = p / fname
     image = mpimg.imread(fname)
     st.image(image, use_column_width=True)
 
 
+def init_dicom_reader(dir):
+    """ "
+    Instantiate DICOM reader
+    """
+    reader = sitk.ImageSeriesReader()
+    dicom_names = reader.GetGDCMSeriesFileNames(dir)
+    reader.SetFileNames(dicom_names)
+    reader.LoadPrivateTagsOn()
+    reader.MetaDataDictionaryArrayUpdateOn()
+    data = reader.Execute()
+    img = sitk.GetArrayViewFromImage(data)
+    n_slices = img.shape[0]
+    return img, n_slices
+
+
 def plot_slice(vol, slice_ix):
+    """
+    Define a CT slice and plot
+    """
     fig, ax = plt.subplots()
     plt.axis("off")
     selected_slice = vol[slice_ix, :, :]
@@ -54,15 +77,12 @@ def plot_slice(vol, slice_ix):
 
 
 def get_axial_view(patient):
+    """
+    Animate through axial slices.
+    """
+
     fname = Path(f"img/train_image/1.2.826.0.1.3680043.{patient}")
-    reader = sitk.ImageSeriesReader()
-    dicom_names = reader.GetGDCMSeriesFileNames(str(p / fname))
-    reader.SetFileNames(dicom_names)
-    reader.LoadPrivateTagsOn()
-    reader.MetaDataDictionaryArrayUpdateOn()
-    data = reader.Execute()
-    img = sitk.GetArrayViewFromImage(data)
-    n_slices = img.shape[0]
+    img, n_slices = init_dicom_reader(dir=str(p / fname))
 
     for frame_num, frame_index in enumerate(np.linspace(0, n_slices, 100)):
 
