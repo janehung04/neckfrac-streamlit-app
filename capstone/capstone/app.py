@@ -25,7 +25,7 @@ def get_frac_prob():
     """
     Return probability of fracture [patient overall, C1,C2,C3,C4,C5,C6,C7]
     """
-    
+
     prob = np.zeros(8)
     prob[0] = 100
     prob[[1, 2]] = 100
