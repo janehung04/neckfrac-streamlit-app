@@ -7,9 +7,6 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
-import matplotlib as mpl
-import pydicom
-from pydicom.pixel_data_handlers.util import apply_voi_lut
 import SimpleITK as sitk
 
 # TODO
