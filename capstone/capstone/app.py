@@ -98,7 +98,7 @@ def get_axial_view(patient):
         progress_bar.progress(frame_num)
         if frame_index < n_slices:
             fig = plot_slice(img, int(frame_index))
-            plot = image.pyplot(fig)
+            image.pyplot(fig)
 
             time.sleep(0.5)
 
@@ -134,10 +134,16 @@ if __name__ == "__main__":
     with col1:
         st.subheader(f"{view} View")
         if view == "Sagittal":
-            get_sagittal_view(patient)
+            try:
+                get_sagittal_view(patient)
+            except:
+                st.write("Come back later 😅")
         elif view == "Axial":
             image = st.empty()
-            get_axial_view(patient)
+            try:
+                get_axial_view(patient)
+            except:
+                st.write("Come back later 😅")
 
             # progress_bar.empty()
             # frame_text.empty()
