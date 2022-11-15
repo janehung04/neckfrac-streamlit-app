@@ -24,12 +24,12 @@ import streamlit as st
 
 
 @st.cache
-def get_frac_prob():
+def get_frac_prob(patient):
     """
     Return probability of fracture [patient overall, C1,C2,C3,C4,C5,C6,C7]
     """
 
-    np.random.seed(42)
+    np.random.seed(int(patient))
 
     # DEBUG patient
     vert_prob = np.random.uniform(low=0.0, high=100.0, size=7)
@@ -150,5 +150,8 @@ if __name__ == "__main__":
 
     with col2:
         st.subheader("Probability of Cervical Fracture")
-        prob_df = get_frac_prob()
-        st.dataframe(prob_df, use_container_width=True)
+        try:
+            prob_df = get_frac_prob(patient)
+            st.dataframe(prob_df, use_container_width=True)
+        except:
+            st.write("Come back later 😅")
