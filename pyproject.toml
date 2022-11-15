@@ -20,6 +20,7 @@ simpleitk = "^2.2.0"
 [tool.poetry.group.dev.dependencies]
 black = "^22.10.0"
 flake8 = "^5.0.4"
+pylint = "^2.15.5"
 
 [build-system]
 requires = ["poetry-core"]

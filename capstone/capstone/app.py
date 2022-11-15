@@ -2,19 +2,23 @@ import logging
 import time
 from pathlib import Path
 
-import streamlit as st
+import matplotlib.image as mpimg
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
 import SimpleITK as sitk
+import streamlit as st
 
 # TODO
-# - [ ] connect to aws ?
+# - [-] connect to aws ?
 # - [ ] call api? and get patient specific
 # - [ ] test with multiple patients?
 # - [ ] make a prediction csv
-# - [ ] deploy and share
+# - [-] deploy and share
+# - [ ] pick good and bad patient and model results
+# - [ ] add bounding boxes to animation
+# - [ ] create two screen capture - good and bad
+# - [x] add more patients to dropdown
 # - [x] add view for axial animation
 # - [x] use a dicom viewer https://neurosnippets.com/posts/diesitcom/
 
@@ -25,9 +29,16 @@ def get_frac_prob():
     Return probability of fracture [patient overall, C1,C2,C3,C4,C5,C6,C7]
     """
 
-    prob = np.zeros(8)
-    prob[0] = 100
-    prob[[1, 2]] = 100
+    np.random.seed(42)
+
+    # DEBUG patient
+    vert_prob = np.random.uniform(low=0.0, high=100.0, size=7)
+    if any(vert_prob > 50):
+        prob = np.random.uniform(low=50.0, high=100.0, size=1)
+    else:
+        prob = np.random.uniform(low=0.0, high=50.0, size=1)
+    prob = np.concatenate((prob, vert_prob))
+
     prob_df = pd.Series(
         prob,
         index=["Patient Overall", "C1", "C2", "C3", "C4", "C5", "C6", "C7"],
@@ -108,7 +119,9 @@ if __name__ == "__main__":
     col1, col2 = st.columns(2)
 
     with st.sidebar:
-        patient = st.selectbox("Patient ID", ("13096", "XXXX"))
+        patient = st.selectbox(
+            "Patient ID", ("13096", "13097", "13098", "13099", "13100")
+        )
         logging.info(f"Getting data for Patient ID: {patient}")
 
         view = st.radio("Anatomical Plane", ("Sagittal", "Axial"), horizontal=True)
