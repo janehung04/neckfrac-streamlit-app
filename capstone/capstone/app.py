@@ -10,17 +10,27 @@ import SimpleITK as sitk
 import streamlit as st
 
 # TODO
-# - [-] connect to aws ?
 # - [ ] call api? and get patient specific
 # - [ ] test with multiple patients?
 # - [ ] make a prediction csv
-# - [-] deploy and share
 # - [ ] pick good and bad patient and model results
 # - [ ] add bounding boxes to animation
 # - [ ] create two screen capture - good and bad
 # - [x] add more patients to dropdown
 # - [x] add view for axial animation
 # - [x] use a dicom viewer https://neurosnippets.com/posts/diesitcom/
+# - [-] connect to aws ?
+# - [-] deploy and share
+
+
+def get_logo():
+    """
+    Get logo for when no patient is selected
+    """
+    fname = Path(f"img/neckfrac_logo.png")
+    fname = p / fname
+    image = mpimg.imread(fname)
+    return image
 
 
 @st.cache
@@ -44,7 +54,7 @@ def get_frac_prob(patient):
         index=["Patient Overall", "C1", "C2", "C3", "C4", "C5", "C6", "C7"],
         name="Probability",
     )
-    prob_df = prob_df.map(lambda x: "{:.1f}%".format(x)).to_frame()
+    prob_df = prob_df.map("{:.1f}%".format).to_frame()
     return prob_df
 
 
@@ -116,11 +126,10 @@ if __name__ == "__main__":
     )
     st.title("🦴 NeckFrac - Quicker, better, more accurate diagnosis to save lives.")
 
-    col1, col2 = st.columns(2)
-
     with st.sidebar:
         patient = st.selectbox(
-            "Patient ID", ("13096", "13097", "13098", "13099", "13100")
+            "Patient ID",
+            ("Select one", "13096", "13097", "13098", "13099", "13100"),
         )
         logging.info(f"Getting data for Patient ID: {patient}")
 
@@ -131,27 +140,33 @@ if __name__ == "__main__":
             progress_bar = st.progress(0)
             frame_text = st.empty()
 
-    with col1:
-        st.subheader(f"{view} View")
-        if view == "Sagittal":
-            try:
-                get_sagittal_view(patient)
-            except:
-                st.write("Come back later 😅")
-        elif view == "Axial":
-            image = st.empty()
-            try:
-                get_axial_view(patient)
-            except:
-                st.write("Come back later 😅")
+    if patient == "Select one":
+        col1, col2, col3 = st.columns(3)
+        col2.image(get_logo(), use_column_width=True)
 
-            # progress_bar.empty()
-            # frame_text.empty()
+    else:
+        col1, col2 = st.columns(2)
+        with col1:
+            st.subheader(f"{view} View")
+            if view == "Sagittal":
+                try:
+                    get_sagittal_view(patient)
+                except Exception as e:
+                    st.write("Patient not found 😅")
+            elif view == "Axial":
+                image = st.empty()
+                try:
+                    get_axial_view(patient)
+                except Exception as e:
+                    st.write("Patient not found 😅")
 
-    with col2:
-        st.subheader("Probability of Cervical Fracture")
-        try:
-            prob_df = get_frac_prob(patient)
-            st.dataframe(prob_df, use_container_width=True)
-        except:
-            st.write("Come back later 😅")
+                # progress_bar.empty()
+                # frame_text.empty()
+
+        with col2:
+            st.subheader("Probability of Cervical Fracture")
+            try:
+                prob_df = get_frac_prob(patient)
+                st.dataframe(prob_df, use_container_width=True)
+            except Exception as e:
+                st.write("Patient not found 😅")
