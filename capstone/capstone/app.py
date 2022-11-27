@@ -27,7 +27,7 @@ def get_logo():
     """
     Get logo for when no patient is selected
     """
-    fname = Path(f"img/neckfrac_logo.png")
+    fname = Path(f"neckfrac_logo.png")
     fname = p / fname
     image = mpimg.imread(fname)
     return image
@@ -62,7 +62,7 @@ def get_sagittal_view(patient):
     """
     Get sagittal view for patient
     """
-    fname = Path(f"img/sagittal_train_image/1.2.826.0.1.3680043.{patient}.png")
+    fname = Path(f"sagittal_train_image/1.2.826.0.1.3680043.{patient}.png")
     fname = p / fname
     image = mpimg.imread(fname)
     st.image(image, use_column_width=True)
@@ -99,7 +99,7 @@ def get_axial_view(patient):
     Animate through axial slices.
     """
 
-    fname = Path(f"img/train_image/1.2.826.0.1.3680043.{patient}")
+    fname = Path(f"train_image/1.2.826.0.1.3680043.{patient}")
     img, n_slices = init_dicom_reader(dir=str(p / fname))
 
     for frame_num, frame_index in enumerate(np.linspace(0, n_slices, 100)):
@@ -117,12 +117,12 @@ def get_axial_view(patient):
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.CRITICAL)
-    p = Path("/Users/janehung/berkeley-mids/w210/capstone/capstone/")
+    p = Path("/Users/janehung/berkeley-mids/w210/data")
 
     st.set_page_config(
         layout="wide",
         page_title="NeckFrac",
-        page_icon=str(p / Path("img/neckfrac_logo.jpeg")),
+        page_icon=str(p / Path("neckfrac_logo.jpeg")),
     )
     st.title("🦴 NeckFrac - Quicker, better, more accurate diagnosis to save lives.")
 
